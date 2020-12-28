@@ -1,4 +1,17 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * File: Function.cs
+ * Project: lib
+ * Created Date: 28/12/2020
+ * Author: Shun Suzuki
+ * -----
+ * Last Modified: 28/12/2020
+ * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
+ * -----
+ * Copyright (c) 2020 Hapis Lab. All rights reserved.
+ * 
+ */
+
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 

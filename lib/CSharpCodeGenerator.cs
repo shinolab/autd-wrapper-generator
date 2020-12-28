@@ -1,4 +1,17 @@
-﻿using System;
+﻿/*
+ * File: CSharpCodeGenerator.cs
+ * Project: lib
+ * Created Date: 28/12/2020
+ * Author: Shun Suzuki
+ * -----
+ * Last Modified: 28/12/2020
+ * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
+ * -----
+ * Copyright (c) 2020 Hapis Lab. All rights reserved.
+ * 
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -8,7 +21,7 @@ namespace autd_wrapper_generator.lib
 {
     internal class CSharpCodeGenerator : ICodeGenerator
     {
-        private static readonly string[] Reserved = {"out", "params"};
+        private static readonly string[] Reserved = { "out", "params" };
 
         public string GetCommentPrefix()
         {
@@ -127,7 +140,7 @@ namespace AUTD3Sharp
                 {
                     PtrOption.None => MapType(type),
                     PtrOption.ConstPtr => MapType(type) + "*",
-                    PtrOption.Ptr => "out " + MapType(type) ,
+                    PtrOption.Ptr => "out " + MapType(type),
                     _ => throw new InvalidExpressionException(sig + " cannot to convert to C# type.")
                 }
             };

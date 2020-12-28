@@ -1,4 +1,17 @@
-﻿using System;
+﻿/*
+ * File: Program.cs
+ * Project: autd-wrapper-generator
+ * Created Date: 28/12/2020
+ * Author: Shun Suzuki
+ * -----
+ * Last Modified: 28/12/2020
+ * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
+ * -----
+ * Copyright (c) 2020 Hapis Lab. All rights reserved.
+ * 
+ */
+
+using System;
 using autd_wrapper_generator.lib;
 
 namespace autd_wrapper_generator
@@ -16,7 +29,7 @@ namespace autd_wrapper_generator
             var cHeaderPath = args[0];
 
             var generators = new (ICodeGenerator, string)[] {
-                (new CSharpCodeGenerator(), "NativeMethods.cs"), 
+                (new CSharpCodeGenerator(), "NativeMethods.cs"),
                 (new PythonCodeGenerator(), "nativemethods.py")
             };
 
