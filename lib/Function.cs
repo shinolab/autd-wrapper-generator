@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace autd_wrapper_generator.lib
@@ -8,20 +8,18 @@ namespace autd_wrapper_generator.lib
 
     internal record Argument
     {
-        internal bool IsConst { get; }
         internal TypeSignature TypeSignature { get; }
         internal string Name { get; }
 
-        internal static Argument From(string[] tokens)
+        internal static Argument From(string arg)
         {
-            var name = tokens.Last();
-            var isConst = tokens.Reverse().Skip(1).Any(x => x.Contains("const"));
-            var type = tokens.Reverse().Skip(1).FirstOrDefault(x => !x.Contains("const"));
-
-            return tokens.Length == 3 ? new Argument(tokens[0] == "const", CTypeGen.From(tokens[1]), tokens[2]) : new Argument(false, CTypeGen.From(tokens[0]), tokens[1]);
+            arg = arg.Trim();
+            var name = arg.Split(' ').Last();
+            var type = CTypeGen.From(arg.Substring(0, arg.Length - name.Length));
+            return new Argument(type, name);
         }
 
-        private Argument(bool isConst, TypeSignature typeSignature, string name) => (IsConst, TypeSignature, Name) = (IsConst, typeSignature, name);
+        private Argument(TypeSignature typeSignature, string name) => (TypeSignature, Name) = (typeSignature, name);
     }
 
     internal class Function

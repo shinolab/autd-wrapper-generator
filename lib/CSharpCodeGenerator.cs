@@ -72,11 +72,11 @@ namespace AUTD3Sharp
             return sb.ToString();
         }
 
-        private static string GetHeader(TypeSignature ret, IEnumerable<(TypeSignature, string)> args)
+        private static string GetHeader(TypeSignature ret, IEnumerable<Argument> args)
         {
             var sb = new StringBuilder();
             sb.Append("[DllImport(DllName, ");
-            if (args != null && args.Select(x => x.Item1.Type).Any(ty => ty == CType.Bool))
+            if (args != null && args.Select(x => x.TypeSignature.Type).Any(ty => ty == CType.Bool))
             {
                 sb.Append("CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true, ");
             }
@@ -98,21 +98,14 @@ namespace AUTD3Sharp
                 {
                     PtrOption.None => MapType(sig.Type),
                     PtrOption.Ptr => "string",
-                    PtrOption.PtrPtr => throw new InvalidExpressionException(sig + " cannot to convert to C# type."),
-                    _ => throw new InvalidExpressionException(sig + " cannot to convert to C# type.")
-                },
-                CType.Void => sig.Ptr switch
-                {
-                    PtrOption.None => MapType(sig.Type),
-                    PtrOption.Ptr => "IntPtr",
-                    PtrOption.PtrPtr => "IntPtr*",
+                    PtrOption.ConstPtr => throw new InvalidExpressionException(sig + " cannot to convert to C# type."),
                     _ => throw new InvalidExpressionException(sig + " cannot to convert to C# type.")
                 },
                 _ => sig.Ptr switch
                 {
                     PtrOption.None => MapType(sig.Type),
                     PtrOption.Ptr => MapType(sig.Type) + "*",
-                    PtrOption.PtrPtr => throw new InvalidExpressionException(sig + " cannot to convert to C# type."),
+                    PtrOption.ConstPtr => throw new InvalidExpressionException(sig + " cannot to convert to C# type."),
                     _ => throw new InvalidExpressionException(sig + " cannot to convert to C# type.")
                 }
             };
@@ -120,27 +113,21 @@ namespace AUTD3Sharp
 
         private static string MapArgType(Argument arg)
         {
-            return arg.TypeSignature.Type switch
+            var type = arg.TypeSignature.Type;
+            return type switch
             {
                 CType.Char => arg.TypeSignature.Ptr switch
                 {
-                    PtrOption.None => MapType(arg.TypeSignature.Type),
-                    PtrOption.Ptr => arg.IsConst ? "string" : "StringBuilder",
-                    PtrOption.PtrPtr => "string*",
+                    PtrOption.None => MapType(type),
+                    PtrOption.Ptr => "StringBuilder",
+                    PtrOption.ConstPtr => "string",
                     _ => throw new InvalidExpressionException(arg.TypeSignature + " cannot to convert to C# type.")
                 },
-                CType.Void => arg.TypeSignature.Ptr switch
+                _ => arg.TypeSignature.Ptr switch
                 {
-                    PtrOption.None => MapType(arg.TypeSignature.Type),
-                    PtrOption.Ptr => "IntPtr",
-                    PtrOption.PtrPtr => arg.IsConst ? "IntPtr*" : "out IntPtr",
-                    _ => throw new InvalidExpressionException(arg.TypeSignature + " cannot to convert to C# type.")
-                },
-                _ => sig.Ptr switch
-                {
-                    PtrOption.None => MapType(sig.Type),
-                    PtrOption.Ptr => MapType(sig.Type) + "*",
-                    PtrOption.PtrPtr => "out " + MapType(sig.Type) + "*",
+                    PtrOption.None => MapType(type),
+                    PtrOption.ConstPtr => MapType(type) + "*",
+                    PtrOption.Ptr => "out " + MapType(type) ,
                     _ => throw new InvalidExpressionException(arg.TypeSignature + " cannot to convert to C# type.")
                 }
             };
@@ -152,6 +139,7 @@ namespace AUTD3Sharp
             {
                 CType.None => throw new InvalidExpressionException(type + " cannot to convert to C# type."),
                 CType.Void => "void",
+                CType.VoidPtr => "IntPtr",
                 CType.Bool => "bool",
                 CType.Char => "char",
                 CType.Int8 => "sbyte",

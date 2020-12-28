@@ -4,6 +4,7 @@
     {
         None,
         Void,
+        VoidPtr,
         Bool,
         Char,
         Int8,
@@ -18,11 +19,12 @@
         Float64,
     }
 
+    // Not supported double pointer
     internal enum PtrOption
     {
         None,
         Ptr,
-        PtrPtr,
+        ConstPtr,
     }
 
     internal record TypeSignature
@@ -51,14 +53,15 @@
 
             var ptrOpt = ptrAttrs switch
             {
+                1 when baseStr.Contains("const") => PtrOption.ConstPtr,
                 1 => PtrOption.Ptr,
-                2 => PtrOption.PtrPtr,
                 _ => PtrOption.None,
             };
 
-            var type = baseStr switch
+            var type = baseStr.Replace("const", "").Trim() switch
             {
                 "void" => CType.Void,
+                "VOID_PTR" => CType.VoidPtr,
                 "bool" => CType.Bool,
                 "char" => CType.Char,
                 "int8_t" => CType.Int8,

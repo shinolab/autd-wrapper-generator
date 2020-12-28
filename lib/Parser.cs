@@ -23,8 +23,6 @@ namespace autd_wrapper_generator.lib
         private static List<Argument> ParseArgs(string str)
         {
             return str.Split(',')
-                .Select(token => token.Trim().Split(' '))
-                .Where(x => x.Length >= 2)
                 .Select(Argument.From)
                 .ToList();
 
