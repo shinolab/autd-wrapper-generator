@@ -59,13 +59,20 @@ namespace AUTD3Sharp
         private static string ReplaceReserved(string name)
         {
             if (Reserved.Contains(name))
+            {
                 return "@" + name;
+            }
+
             return name;
         }
 
         private static string SnakeToLowerCamel(string snake)
         {
-            if (string.IsNullOrEmpty(snake)) return snake;
+            if (string.IsNullOrEmpty(snake))
+            {
+                return snake;
+            }
+
             var camel = snake
                     .Split('_', StringSplitOptions.RemoveEmptyEntries)
                     .Select(s => char.ToUpperInvariant(s[0]) + s[1..])

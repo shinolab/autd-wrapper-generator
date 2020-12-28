@@ -48,7 +48,10 @@ namespace autd_wrapper_generator.lib
         internal CType Type { get; }
         internal PtrOption Ptr { get; }
 
-        internal TypeSignature(CType type, PtrOption ptr) => (Type, Ptr) = (type, ptr);
+        internal TypeSignature(CType type, PtrOption ptr)
+        {
+            (Type, Ptr) = (type, ptr);
+        }
 
         public override string ToString()
         {

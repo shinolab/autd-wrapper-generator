@@ -45,7 +45,10 @@ namespace autd_wrapper_generator.lib
         {
             var matches = _rx.Matches(line);
 
-            if (matches.Count <= 0) return new Function(TypeSignature.None, string.Empty, null);
+            if (matches.Count <= 0)
+            {
+                return new Function(TypeSignature.None, string.Empty, null);
+            }
 
             var match = matches[0];
             var ret = CTypeGen.From(match.Groups["ret"].Value);
@@ -59,13 +62,23 @@ namespace autd_wrapper_generator.lib
             while (!_sr.EndOfStream)
             {
                 var line = _sr.ReadLine()?.Trim();
-                if (line == null) continue;
+                if (line == null)
+                {
+                    continue;
+                }
 
-                if (!line.StartsWith(ExportPrefix)) continue;
+                if (!line.StartsWith(ExportPrefix))
+                {
+                    continue;
+                }
 
                 while (!line.EndsWith(';'))
                 {
-                    if (_sr.EndOfStream) yield break;
+                    if (_sr.EndOfStream)
+                    {
+                        yield break;
+                    }
+
                     line += _sr.ReadLine()?.Trim();
                 }
 
@@ -82,7 +95,11 @@ namespace autd_wrapper_generator.lib
 
         private void Dispose(bool disposing)
         {
-            if (_disposed) return;
+            if (_disposed)
+            {
+                return;
+            }
+
             if (disposing)
             {
                 _sr.Dispose();

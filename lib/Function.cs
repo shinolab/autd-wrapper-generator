@@ -31,7 +31,10 @@ namespace autd_wrapper_generator.lib
             return new Argument(type, name);
         }
 
-        private Argument(TypeSignature typeSignature, string name) => (TypeSignature, Name) = (typeSignature, name);
+        private Argument(TypeSignature typeSignature, string name)
+        {
+            (TypeSignature, Name) = (typeSignature, name);
+        }
     }
 
     internal class Function
@@ -53,7 +56,10 @@ namespace autd_wrapper_generator.lib
             sb.Append($"{ReturnTypeSignature}:");
             sb.Append($"{Name}:");
             foreach (var argument in ArgumentsList)
+            {
                 sb.Append($"({argument.TypeSignature}:{argument.Name})");
+            }
+
             return sb.ToString();
         }
     }
