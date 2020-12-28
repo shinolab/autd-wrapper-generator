@@ -15,14 +15,14 @@
         UInt32,
         UInt64,
         Float32,
-        Float64
+        Float64,
     }
 
     internal enum PtrOption
     {
         None,
         Ptr,
-        PtrPtr
+        PtrPtr,
     }
 
     internal record TypeSignature
@@ -53,7 +53,7 @@
             {
                 1 => PtrOption.Ptr,
                 2 => PtrOption.PtrPtr,
-                _ => PtrOption.None
+                _ => PtrOption.None,
             };
 
             var type = baseStr switch
@@ -71,7 +71,7 @@
                 "uint64_t" => CType.UInt64,
                 "float" => CType.Float32,
                 "double" => CType.Float64,
-                _ => CType.None
+                _ => CType.None,
             };
 
             return new TypeSignature(type, ptrOpt);

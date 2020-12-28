@@ -20,12 +20,12 @@ namespace autd_wrapper_generator.lib
             _rx = new Regex(@$"^{ExportPrefix}\s(?<ret>.+?)\s(?<name>.*?)\((?<args>.*)\)");
         }
 
-        private static List<(TypeSignature, string)> ParseArgs(string str)
+        private static List<Argument> ParseArgs(string str)
         {
             return str.Split(',')
                 .Select(token => token.Trim().Split(' '))
-                .Where(x => x.Length == 2)
-                .Select(x => (CTypeGen.From(x[0]), x[1]))
+                .Where(x => x.Length >= 2)
+                .Select(Argument.From)
                 .ToList();
 
         }
@@ -50,14 +50,15 @@ namespace autd_wrapper_generator.lib
                 var line = _sr.ReadLine()?.Trim();
                 if (line == null) continue;
 
+                if (!line.StartsWith(ExportPrefix)) continue;
+
                 while (!line.EndsWith(';'))
                 {
                     if (_sr.EndOfStream) yield break;
                     line += _sr.ReadLine()?.Trim();
                 }
 
-                if (line.StartsWith(ExportPrefix))
-                    yield return Parse(line);
+                yield return Parse(line);
             }
         }
 
