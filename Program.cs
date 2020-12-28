@@ -14,9 +14,18 @@ namespace autd_wrapper_generator
             }
 
             var cHeaderPath = args[0];
-            var parser = new Parser(cHeaderPath);
-            var writer = new CodeWriter(new CSharpCodeGenerator(), "NativeMethods.cs");
-            writer.Write(parser);
+
+            var generators = new (ICodeGenerator, string)[] {
+                (new CSharpCodeGenerator(), "NativeMethods.cs"), 
+                (new PythonCodeGenerator(), "nativemethods.py")
+            };
+
+            foreach (var (gen, filename) in generators)
+            {
+                var parser = new Parser(cHeaderPath);
+                var writer = new CodeWriter(gen, filename);
+                writer.Write(parser);
+            }
         }
     }
 }

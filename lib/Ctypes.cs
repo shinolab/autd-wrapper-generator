@@ -1,4 +1,6 @@
-﻿namespace autd_wrapper_generator.lib
+﻿using System;
+
+namespace autd_wrapper_generator.lib
 {
     internal enum CType
     {
@@ -16,15 +18,16 @@
         UInt32,
         UInt64,
         Float32,
-        Float64,
+        Float64
     }
 
     // Not supported double pointer
+    [Flags]
     internal enum PtrOption
     {
         None,
         Ptr,
-        ConstPtr,
+        ConstPtr
     }
 
     internal record TypeSignature
@@ -55,7 +58,7 @@
             {
                 1 when baseStr.Contains("const") => PtrOption.ConstPtr,
                 1 => PtrOption.Ptr,
-                _ => PtrOption.None,
+                _ => PtrOption.None
             };
 
             var type = baseStr.Replace("const", "").Trim() switch
@@ -74,7 +77,7 @@
                 "uint64_t" => CType.UInt64,
                 "float" => CType.Float32,
                 "double" => CType.Float64,
-                _ => CType.None,
+                _ => CType.None
             };
 
             return new TypeSignature(type, ptrOpt);

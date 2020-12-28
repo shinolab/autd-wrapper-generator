@@ -67,7 +67,7 @@ namespace AUTD3Sharp
             sb.Append(string.Join(", ", args.Select(arg =>
             {
                 var annotation = arg.TypeSignature.Type == CType.Bool ? "[MarshalAs(UnmanagedType.U1)] " : "";
-                return $"{annotation}{MapArgType(arg)} {SnakeToLowerCamel(arg.Name)}";
+                return $"{annotation}{MapArgType(arg.TypeSignature)} {SnakeToLowerCamel(arg.Name)}";
             })));
             return sb.ToString();
         }
@@ -111,24 +111,24 @@ namespace AUTD3Sharp
             };
         }
 
-        private static string MapArgType(Argument arg)
+        private static string MapArgType(TypeSignature sig)
         {
-            var type = arg.TypeSignature.Type;
+            var type = sig.Type;
             return type switch
             {
-                CType.Char => arg.TypeSignature.Ptr switch
+                CType.Char => sig.Ptr switch
                 {
                     PtrOption.None => MapType(type),
                     PtrOption.Ptr => "StringBuilder",
                     PtrOption.ConstPtr => "string",
-                    _ => throw new InvalidExpressionException(arg.TypeSignature + " cannot to convert to C# type.")
+                    _ => throw new InvalidExpressionException(sig + " cannot to convert to C# type.")
                 },
-                _ => arg.TypeSignature.Ptr switch
+                _ => sig.Ptr switch
                 {
                     PtrOption.None => MapType(type),
                     PtrOption.ConstPtr => MapType(type) + "*",
                     PtrOption.Ptr => "out " + MapType(type) ,
-                    _ => throw new InvalidExpressionException(arg.TypeSignature + " cannot to convert to C# type.")
+                    _ => throw new InvalidExpressionException(sig + " cannot to convert to C# type.")
                 }
             };
         }
