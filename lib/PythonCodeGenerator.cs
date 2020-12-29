@@ -4,7 +4,7 @@
  * Created Date: 28/12/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 28/12/2020
+ * Last Modified: 29/12/2020
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -31,7 +31,7 @@ namespace autd_wrapper_generator.lib
             return @"
 import threading
 import ctypes
-from ctypes import c_void_p, c_bool, c_int, POINTER, c_float, c_long, c_char_p, c_ubyte, c_uint, c_ulong, c_ushort
+from ctypes import c_void_p, c_bool, c_int, POINTER, c_float, c_char_p, c_ubyte, c_uint, c_ulong, c_ushort
 
 class Singleton(type):
     _instances = {}
