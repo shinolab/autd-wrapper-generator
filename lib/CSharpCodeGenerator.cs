@@ -66,28 +66,14 @@ namespace AUTD3Sharp
             return name;
         }
 
-        private static string SnakeToLowerCamel(string snake)
-        {
-            if (string.IsNullOrEmpty(snake))
-            {
-                return snake;
-            }
-
-            var camel = snake
-                    .Split('_', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(s => char.ToUpperInvariant(s[0]) + s[1..])
-                    .Aggregate(char.ToLowerInvariant(snake[0]).ToString(), (s1, s2) => s1 + s2)
-                    .Remove(1, 1);
-            return ReplaceReserved(camel);
-        }
-
         private static string GetArgs(IEnumerable<Argument> args)
         {
             var sb = new StringBuilder();
             sb.Append(string.Join(", ", args.Select(arg =>
             {
                 var annotation = arg.TypeSignature.Type == CType.Bool ? "[MarshalAs(UnmanagedType.U1)] " : "";
-                return $"{annotation}{MapArgType(arg.TypeSignature)} {SnakeToLowerCamel(arg.Name)}";
+                var argName = ReplaceReserved(NamingUtils.SnakeToLowerCamel(arg.Name));
+                return $"{annotation}{MapArgType(arg.TypeSignature)} {argName}";
             })));
             return sb.ToString();
         }

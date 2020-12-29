@@ -80,13 +80,13 @@ class Nativemethods(metaclass=Singleton):
                 {
                     PtrOption.None => MapType(type),
                     PtrOption.Ptr or PtrOption.ConstPtr => "c_char_p",
-                    _ => throw new InvalidExpressionException(sig + " cannot to convert to C# type.")
+                    _ => throw new InvalidExpressionException(sig + " cannot to convert to python type.")
                 },
                 _ => sig.Ptr switch
                 {
                     PtrOption.None => MapType(type),
                     PtrOption.Ptr or PtrOption.ConstPtr => $"POINTER({MapType(type)})",
-                    _ => throw new InvalidExpressionException(sig + " cannot to convert to C# type.")
+                    _ => throw new InvalidExpressionException(sig + " cannot to convert to python type.")
                 }
             };
         }
@@ -95,7 +95,7 @@ class Nativemethods(metaclass=Singleton):
         {
             return type switch
             {
-                CType.None => throw new InvalidExpressionException(type + " cannot to convert to C# type."),
+                CType.None => throw new InvalidExpressionException(type + " cannot to convert to python type."),
                 CType.Void => "None",
                 CType.VoidPtr => "c_void_p",
                 CType.Bool => "c_bool",

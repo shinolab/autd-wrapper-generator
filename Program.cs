@@ -30,7 +30,8 @@ namespace autd_wrapper_generator
 
             var generators = new (ICodeGenerator, string)[] {
                 (new CSharpCodeGenerator(), "NativeMethods.cs"),
-                (new PythonCodeGenerator(), "nativemethods.py")
+                (new PythonCodeGenerator(), "nativemethods.py"),
+                (new JuliaCodeGenerator(), "NativeMethods.jl")
             };
 
             foreach (var (gen, filename) in generators)
