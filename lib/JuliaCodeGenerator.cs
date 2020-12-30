@@ -111,7 +111,7 @@ const _dll_name = joinpath(@__DIR__, ""bin"", get_lib_prefix() * ""autd3capi"" *
                 _ => sig.Ptr switch
                 {
                     PtrOption.None => MapType(type),
-                    PtrOption.ConstPtr => "Array{" + MapType(type) + ", 1}",
+                    PtrOption.ConstPtr => "Ptr{" + MapType(type) + "}",
                     PtrOption.Ptr => "Ref{" + MapType(type) + "}",
                     _ => throw new InvalidExpressionException(sig + " cannot to convert to Julia type.")
                 }
