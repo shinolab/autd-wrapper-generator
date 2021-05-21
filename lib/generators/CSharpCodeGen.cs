@@ -1,13 +1,13 @@
 ﻿/*
- * File: CSharpCodeGenerator.cs
- * Project: lib
- * Created Date: 28/12/2020
+ * File: CSharpCodeGen.cs
+ * Project: generators
+ * Created Date: 21/05/2021
  * Author: Shun Suzuki
  * -----
- * Last Modified: 28/12/2020
+ * Last Modified: 21/05/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
- * Copyright (c) 2020 Hapis Lab. All rights reserved.
+ * Copyright (c) 2021 Hapis Lab. All rights reserved.
  * 
  */
 
@@ -17,9 +17,9 @@ using System.Data;
 using System.Linq;
 using System.Text;
 
-namespace autd_wrapper_generator.lib
+namespace autd_wrapper_generator.lib.generators
 {
-    internal class CSharpCodeGenerator : ICodeGenerator
+    internal class CSharpCodeGen : ICodeGenerator
     {
         private static readonly string[] Reserved = { "out", "params" };
 
@@ -39,7 +39,6 @@ namespace AUTD3Sharp
 {
     internal static unsafe class NativeMethods
     {
-        private const string DllName = ""autd3capi"";
 ";
         }
 
@@ -51,18 +50,14 @@ namespace AUTD3Sharp
 ";
         }
 
-        public string GetFunctionDefinition(Function func)
+        public string GetFunctionDefinition(Function func, string libName)
         {
-            return $"        {GetHeader(func.ReturnTypeSignature, func.ArgumentsList)} {func.Name}({GetArgs(func.ArgumentsList)});";
+            return $"        {GetHeader(libName, func.ReturnTypeSignature, func.ArgumentsList)} {func.Name}({GetArgs(func.ArgumentsList)});";
         }
 
         private static string ReplaceReserved(string name)
         {
-            if (Reserved.Contains(name))
-            {
-                return "@" + name;
-            }
-
+            if (Reserved.Contains(name)) return "@" + name;
             return name;
         }
 
@@ -78,62 +73,46 @@ namespace AUTD3Sharp
             return sb.ToString();
         }
 
-        private static string GetHeader(TypeSignature ret, IEnumerable<Argument> args)
+        private static string GetHeader(string libName, TypeSignature ret, IEnumerable<Argument> args)
         {
             var sb = new StringBuilder();
-            sb.Append("[DllImport(DllName, ");
+            sb.Append($"[DllImport(\"{libName}\", ");
             if (args != null && args.Select(x => x.TypeSignature.Type).Any(ty => ty == CType.Bool))
-            {
                 sb.Append("CharSet = CharSet.Ansi, BestFitMapping = false, ThrowOnUnmappableChar = true, ");
-            }
             sb.Append("CallingConvention = CallingConvention.StdCall)] ");
 
             if (ret.Type == CType.Bool)
-            {
                 sb.Append("[return: MarshalAs(UnmanagedType.U1)] ");
-            }
             sb.Append($"public static extern {MapRetType(ret)}");
             return sb.ToString();
         }
 
-        private static string MapRetType(TypeSignature sig)
-        {
-            return sig.Type switch
-            {
-                CType.Char => sig.Ptr switch
-                {
-                    PtrOption.None => MapType(sig.Type),
-                    PtrOption.Ptr => "string",
-                    PtrOption.ConstPtr => throw new InvalidExpressionException(sig + " cannot to convert to C# type."),
-                    _ => throw new InvalidExpressionException(sig + " cannot to convert to C# type.")
-                },
-                _ => sig.Ptr switch
-                {
-                    PtrOption.None => MapType(sig.Type),
-                    PtrOption.Ptr => MapType(sig.Type) + "*",
-                    PtrOption.ConstPtr => throw new InvalidExpressionException(sig + " cannot to convert to C# type."),
-                    _ => throw new InvalidExpressionException(sig + " cannot to convert to C# type.")
-                }
-            };
-        }
+        private static string MapRetType(TypeSignature sig) => sig.Ptr == PtrOption.None ? MapType(sig.Type) : throw new InvalidExpressionException(sig + " cannot to convert to C# type.");
 
         private static string MapArgType(TypeSignature sig)
         {
             var type = sig.Type;
             return type switch
             {
+                CType.Void => sig.Ptr switch
+                {
+                    PtrOption.None => throw new InvalidExpressionException(sig + " cannot to convert to C# type."),
+                    PtrOption.Ptr => "IntPtr",
+                    PtrOption.PtrPtr => "out IntPtr",
+                    _ => throw new InvalidExpressionException(sig + " cannot to convert to C# type.")
+                },
                 CType.Char => sig.Ptr switch
                 {
                     PtrOption.None => MapType(type),
-                    PtrOption.Ptr => "StringBuilder",
-                    PtrOption.ConstPtr => "string",
+                    PtrOption.Ptr => "StringBuilder?",
+                    PtrOption.PtrPtr => throw new InvalidExpressionException(sig + " cannot to convert to C# type."),
                     _ => throw new InvalidExpressionException(sig + " cannot to convert to C# type.")
                 },
                 _ => sig.Ptr switch
                 {
                     PtrOption.None => MapType(type),
-                    PtrOption.ConstPtr => MapType(type) + "*",
-                    PtrOption.Ptr => "out " + MapType(type),
+                    PtrOption.Ptr => MapType(type) + "*",
+                    PtrOption.PtrPtr => throw new InvalidExpressionException(sig + " cannot to convert to C# type."),
                     _ => throw new InvalidExpressionException(sig + " cannot to convert to C# type.")
                 }
             };
@@ -145,9 +124,9 @@ namespace AUTD3Sharp
             {
                 CType.None => throw new InvalidExpressionException(type + " cannot to convert to C# type."),
                 CType.Void => "void",
-                CType.VoidPtr => "IntPtr",
                 CType.Bool => "bool",
                 CType.Char => "char",
+                CType.String => "string",
                 CType.Int8 => "sbyte",
                 CType.Uint8 => "byte",
                 CType.Int16 => "short",

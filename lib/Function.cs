@@ -4,7 +4,7 @@
  * Created Date: 28/12/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 28/12/2020
+ * Last Modified: 21/05/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -27,7 +27,7 @@ namespace autd_wrapper_generator.lib
         {
             arg = arg.Trim();
             var name = arg.Split(' ').Last();
-            var type = CTypeGen.From(arg.Substring(0, arg.Length - name.Length));
+            var type = CTypeGen.From(arg[..^name.Length]);
             return new Argument(type, name);
         }
 
@@ -55,11 +55,7 @@ namespace autd_wrapper_generator.lib
             var sb = new StringBuilder();
             sb.Append($"{ReturnTypeSignature}:");
             sb.Append($"{Name}:");
-            foreach (var argument in ArgumentsList)
-            {
-                sb.Append($"({argument.TypeSignature}:{argument.Name})");
-            }
-
+            foreach (var argument in ArgumentsList) sb.Append($"({argument.TypeSignature}:{argument.Name})");
             return sb.ToString();
         }
     }

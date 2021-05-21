@@ -4,7 +4,7 @@
  * Created Date: 28/12/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 28/12/2020
+ * Last Modified: 21/05/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -19,9 +19,9 @@ namespace autd_wrapper_generator.lib
     {
         None,
         Void,
-        VoidPtr,
         Bool,
         Char,
+        String,
         Int8,
         Uint8,
         Int16,
@@ -34,13 +34,12 @@ namespace autd_wrapper_generator.lib
         Float64
     }
 
-    // Not supported double pointer
     [Flags]
     internal enum PtrOption
     {
         None,
         Ptr,
-        ConstPtr
+        PtrPtr
     }
 
     internal record TypeSignature
@@ -69,20 +68,19 @@ namespace autd_wrapper_generator.lib
             str = str.Trim();
             var baseStr = str.TrimEnd('*');
             var ptrAttrs = str.Length - baseStr.Length;
-
             var ptrOpt = ptrAttrs switch
             {
-                1 when baseStr.Contains("const") => PtrOption.ConstPtr,
+                2 => PtrOption.PtrPtr,
                 1 => PtrOption.Ptr,
                 _ => PtrOption.None
             };
 
-            var type = baseStr.Replace("const", "").Trim() switch
+            var type = baseStr switch
             {
                 "void" => CType.Void,
-                "VOID_PTR" => CType.VoidPtr,
                 "bool" => CType.Bool,
                 "char" => CType.Char,
+                "const char" => CType.String,
                 "int8_t" => CType.Int8,
                 "uint8_t" => CType.Uint8,
                 "int16_t" => CType.Int16,
@@ -93,8 +91,9 @@ namespace autd_wrapper_generator.lib
                 "uint64_t" => CType.UInt64,
                 "float" => CType.Float32,
                 "double" => CType.Float64,
-                _ => CType.None
+                _ => throw new NotSupportedException(baseStr)
             };
+            if (type == CType.String) ptrOpt = PtrOption.None;
 
             return new TypeSignature(type, ptrOpt);
         }

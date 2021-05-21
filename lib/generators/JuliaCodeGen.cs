@@ -1,16 +1,15 @@
-/*
- * File: JuliaCodeGenerator.cs
- * Project: lib
- * Created Date: 29/12/2020
+﻿/*
+ * File: JuliaCodeGen.cs
+ * Project: generators
+ * Created Date: 21/05/2021
  * Author: Shun Suzuki
  * -----
- * Last Modified: 29/12/2020
+ * Last Modified: 21/05/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
- * Copyright (c) 2020 Hapis Lab. All rights reserved.
+ * Copyright (c) 2021 Hapis Lab. All rights reserved.
  * 
  */
-
 
 using System;
 using System.Collections.Generic;
@@ -18,11 +17,11 @@ using System.Data;
 using System.Linq;
 using System.Text;
 
-namespace autd_wrapper_generator.lib
+namespace autd_wrapper_generator.lib.generators
 {
-    internal class JuliaCodeGenerator : ICodeGenerator
+    internal class JuliaCodeGen : ICodeGenerator
     {
-        private static readonly string[] Reserved = { "out", "params" };
+        private readonly HashSet<string> _libs = new();
 
         public string GetCommentPrefix()
         {
@@ -50,7 +49,6 @@ function get_lib_prefix()
     end
 end
 
-const _dll_name = joinpath(@__DIR__, ""bin"", get_lib_prefix() * ""autd3capi"" * get_lib_ext())
 ";
         }
 
@@ -59,9 +57,17 @@ const _dll_name = joinpath(@__DIR__, ""bin"", get_lib_prefix() * ""autd3capi"" *
             return string.Empty;
         }
 
-        public string GetFunctionDefinition(Function func)
+        public string GetFunctionDefinition(Function func, string libName)
         {
-            return $"{GetHeader(func)} = ccall((:{func.Name},  _dll_name), {MapRetType(func.ReturnTypeSignature)}, ({func.ArgumentsList.Select(arg => MapArgType(arg.TypeSignature) + ", ").Aggregate(string.Empty, (s, a) => s + a)}), {GetArgs(func)})";
+            var sb = new StringBuilder();
+            if (!_libs.Contains(libName))
+            {
+                _libs.Add(libName);
+                sb.AppendLine($"const _{NamingUtils.ToSnake(libName)} = joinpath(@__DIR__, \"bin\", get_lib_prefix() * \"{libName}\" * get_lib_ext())");
+            }
+
+            sb.AppendLine($"{GetHeader(func)} = ccall((:{func.Name},  _{NamingUtils.ToSnake(libName)}), {MapRetType(func.ReturnTypeSignature)}, ({func.ArgumentsList.Select(arg => MapArgType(arg.TypeSignature) + ", ").Aggregate(string.Empty, (s, a) => s + a)}), {GetArgs(func)})");
+            return sb.ToString();
         }
 
         private static string GetArgs(Function func)
@@ -77,22 +83,11 @@ const _dll_name = joinpath(@__DIR__, ""bin"", get_lib_prefix() * ""autd3capi"" *
         private static string MapRetType(TypeSignature sig)
         {
             var type = sig.Type;
-            return type switch
+            return sig.Ptr switch
             {
-                CType.Char => sig.Ptr switch
-                {
-                    PtrOption.None => MapType(type),
-                    PtrOption.Ptr => "Cstring",
-                    PtrOption.ConstPtr => throw new InvalidExpressionException(sig + " cannot to convert to Julia type."),
-                    _ => throw new InvalidExpressionException(sig + " cannot to convert to Julia type.")
-                },
-                _ => sig.Ptr switch
-                {
-                    PtrOption.None => MapType(type),
-                    PtrOption.Ptr => "Array{" + MapType(type) + ", 1}",
-                    PtrOption.ConstPtr => throw new InvalidExpressionException(sig + " cannot to convert to Julia type."),
-                    _ => throw new InvalidExpressionException(sig + " cannot to convert to Julia type.")
-                }
+                PtrOption.None => MapType(type),
+                PtrOption.Ptr => "Array{" + MapType(type) + ", 1}",
+                PtrOption.PtrPtr or _ => throw new InvalidExpressionException(sig + " cannot to convert to Julia type.")
             };
         }
 
@@ -105,14 +100,13 @@ const _dll_name = joinpath(@__DIR__, ""bin"", get_lib_prefix() * ""autd3capi"" *
                 {
                     PtrOption.None => MapType(type),
                     PtrOption.Ptr => "Ref{UInt8}",
-                    PtrOption.ConstPtr => "Cstring",
-                    _ => throw new InvalidExpressionException(sig + " cannot to convert to Julia type.")
+                    PtrOption.PtrPtr or _ => throw new InvalidExpressionException(sig + " cannot to convert to Julia type.")
                 },
                 _ => sig.Ptr switch
                 {
                     PtrOption.None => MapType(type),
-                    PtrOption.ConstPtr => "Ptr{" + MapType(type) + "}",
-                    PtrOption.Ptr => "Ref{" + MapType(type) + "}",
+                    PtrOption.Ptr => "Ptr{" + MapType(type) + "}",
+                    PtrOption.PtrPtr => "Ref{Ptr{" + MapType(type) + "}}",
                     _ => throw new InvalidExpressionException(sig + " cannot to convert to Julia type.")
                 }
             };
@@ -124,9 +118,9 @@ const _dll_name = joinpath(@__DIR__, ""bin"", get_lib_prefix() * ""autd3capi"" *
             {
                 CType.None => throw new InvalidExpressionException(type + " cannot to convert to Julia type."),
                 CType.Void => "Cvoid",
-                CType.VoidPtr => "Ptr{Cvoid}",
                 CType.Bool => "Bool",
                 CType.Char => "UInt8",
+                CType.String => "Cstring",
                 CType.Int8 => "Int8",
                 CType.Uint8 => "UInt8",
                 CType.Int16 => "Int16",

@@ -1,13 +1,13 @@
 ﻿/*
- * File: PythonCodeGenerator.cs
- * Project: lib
- * Created Date: 28/12/2020
+ * File: PythonCodeGen.cs
+ * Project: generators
+ * Created Date: 21/05/2021
  * Author: Shun Suzuki
  * -----
- * Last Modified: 29/12/2020
+ * Last Modified: 21/05/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
- * Copyright (c) 2020 Hapis Lab. All rights reserved.
+ * Copyright (c) 2021 Hapis Lab. All rights reserved.
  * 
  */
 
@@ -17,10 +17,12 @@ using System.Data;
 using System.Linq;
 using System.Text;
 
-namespace autd_wrapper_generator.lib
+namespace autd_wrapper_generator.lib.generators
 {
-    internal class PythonCodeGenerator : ICodeGenerator
+    internal class PythonCodeGen : ICodeGenerator
     {
+        private readonly HashSet<string> _libs = new();
+
         public string GetCommentPrefix()
         {
             return "#";
@@ -31,7 +33,8 @@ namespace autd_wrapper_generator.lib
             return @"
 import threading
 import ctypes
-from ctypes import c_void_p, c_bool, c_int, POINTER, c_float, c_char_p, c_ubyte, c_uint, c_ulong, c_ushort
+import os
+from ctypes import c_void_p, c_bool, c_int, POINTER, c_double, c_char_p, c_ubyte, c_uint, c_ulong, c_ushort
 
 class Singleton(type):
     _instances = {}
@@ -46,10 +49,9 @@ class Singleton(type):
 
 
 class Nativemethods(metaclass=Singleton):
-    dll = None
-
-    def init_dll(self, dlllocation):
-        self.dll = ctypes.CDLL(dlllocation)
+    def init_dll(self, bin_location, bin_ext):
+        self._bin_location = bin_location
+        self._bin_ext = bin_ext
 ";
         }
 
@@ -58,11 +60,20 @@ class Nativemethods(metaclass=Singleton):
             return string.Empty;
         }
 
-        public string GetFunctionDefinition(Function func)
+        public string GetFunctionDefinition(Function func, string libName)
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"        self.dll.{func.Name}.argtypes = [{GetArgs(func.ArgumentsList)}]");
-            sb.AppendLine($"        self.dll.{func.Name}.restypes = [{MapType(func.ReturnTypeSignature)}]");
+            if (!_libs.Contains(libName))
+            {
+                _libs.Add(libName);
+                sb.AppendLine($"    def init_{NamingUtils.ToSnake(libName)}(self):");
+                sb.AppendLine($"        if self.{NamingUtils.ToSnake(libName)} is not None:");
+                sb.AppendLine($"            return");
+                sb.AppendLine($"        self.{NamingUtils.ToSnake(libName)} = ctypes.CDLL(os.path.join(self._bin_location, \"{libName}\" + self._bin_ext))");
+            }
+
+            sb.AppendLine($"        self.{NamingUtils.ToSnake(libName)}.{func.Name}.argtypes = [{GetArgs(func.ArgumentsList)}]");
+            sb.AppendLine($"        self.{NamingUtils.ToSnake(libName)}.{func.Name}.restypes = [{MapType(func.ReturnTypeSignature)}]");
             return sb.ToString();
         }
 
@@ -79,14 +90,21 @@ class Nativemethods(metaclass=Singleton):
                 CType.Char => sig.Ptr switch
                 {
                     PtrOption.None => MapType(type),
-                    PtrOption.Ptr or PtrOption.ConstPtr => "c_char_p",
+                    PtrOption.Ptr => "c_char_p",
+                    PtrOption.PtrPtr or _ => throw new InvalidExpressionException(sig + " cannot to convert to python type."),
+                },
+                CType.Void => sig.Ptr switch
+                {
+                    PtrOption.None => MapType(type),
+                    PtrOption.Ptr => "c_void_p",
+                    PtrOption.PtrPtr => $"POINTER(c_void_p)",
                     _ => throw new InvalidExpressionException(sig + " cannot to convert to python type.")
                 },
                 _ => sig.Ptr switch
                 {
                     PtrOption.None => MapType(type),
-                    PtrOption.Ptr or PtrOption.ConstPtr => $"POINTER({MapType(type)})",
-                    _ => throw new InvalidExpressionException(sig + " cannot to convert to python type.")
+                    PtrOption.Ptr => $"POINTER({MapType(type)})",
+                    PtrOption.PtrPtr or _ => throw new InvalidExpressionException(sig + " cannot to convert to python type.")
                 }
             };
         }
@@ -97,7 +115,6 @@ class Nativemethods(metaclass=Singleton):
             {
                 CType.None => throw new InvalidExpressionException(type + " cannot to convert to python type."),
                 CType.Void => "None",
-                CType.VoidPtr => "c_void_p",
                 CType.Bool => "c_bool",
                 CType.Uint8 => "c_ubyte",
                 CType.Int16 => "c_int",
@@ -108,6 +125,7 @@ class Nativemethods(metaclass=Singleton):
                 CType.UInt64 => "c_ulong",
                 CType.Float32 => "c_float",
                 CType.Char => "c_char",
+                CType.String => "c_char_p",
                 CType.Int8 => "c_byte",
                 CType.Float64 => "c_double",
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
