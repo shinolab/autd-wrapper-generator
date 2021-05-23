@@ -19,7 +19,7 @@ namespace autd_wrapper_generator.lib
 {
     internal static class NamingUtils
     {
-        private static readonly string[] Abbreviations = { "AUTD", "STM", "PCM", "SOEM", "TwinCAT", "SDP", "EVD", "GSPAT", "GS", "LM" };
+        private static readonly string[] Abbreviations = { "AUTD", "STM", "FPGA", "SOEM", "TwinCAT", "SDP", "EVD", "GSPAT", "GS", "LM" };
         private static readonly Regex Regex = new(string.Join('|', Abbreviations.Select(abbr => $@"(?<word>{abbr})")) + @"|(?<word>[A-Z][a-z]*)");
 
         internal static string SnakeToLowerCamel(string snake)
