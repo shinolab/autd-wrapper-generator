@@ -4,7 +4,7 @@
  * Created Date: 21/05/2021
  * Author: Shun Suzuki
  * -----
- * Last Modified: 21/05/2021
+ * Last Modified: 23/05/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2021 Hapis Lab. All rights reserved.
@@ -67,9 +67,9 @@ class Nativemethods(metaclass=Singleton):
             {
                 _libs.Add(libName);
                 sb.AppendLine($"    def init_{NamingUtils.ToSnake(libName)}(self):");
-                sb.AppendLine($"        if self.{NamingUtils.ToSnake(libName)} is not None:");
+                sb.AppendLine($"        if hasattr(self, '{NamingUtils.ToSnake(libName)}'):");
                 sb.AppendLine($"            return");
-                sb.AppendLine($"        self.{NamingUtils.ToSnake(libName)} = ctypes.CDLL(os.path.join(self._bin_location, \"{libName}\" + self._bin_ext))");
+                sb.AppendLine($"        self.{NamingUtils.ToSnake(libName)} = ctypes.CDLL(os.path.join(self._bin_location, \"{libName.Replace("autd3capi", $"autd3capi_{Constants.Version}")}\" + self._bin_ext))");
             }
 
             sb.AppendLine($"        self.{NamingUtils.ToSnake(libName)}.{func.Name}.argtypes = [{GetArgs(func.ArgumentsList)}]");
