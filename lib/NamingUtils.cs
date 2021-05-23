@@ -4,7 +4,7 @@
  * Created Date: 29/12/2020
  * Author: Shun Suzuki
  * -----
- * Last Modified: 21/05/2021
+ * Last Modified: 23/05/2021
  * Modified By: Shun Suzuki (suzuki@hapis.k.u-tokyo.ac.jp)
  * -----
  * Copyright (c) 2020 Hapis Lab. All rights reserved.
@@ -19,15 +19,12 @@ namespace autd_wrapper_generator.lib
 {
     internal static class NamingUtils
     {
-        private static readonly string[] Abbreviations = { "AUTD", "STM", "PCM", "SOEM", "TwinCAT" };
-        private static readonly Regex Regex = new(string.Join('|', Abbreviations.Select(abbr => $@"(?<word>{abbr})")) + @"|(?<word>[A-Z][a-z]+)");
+        private static readonly string[] Abbreviations = { "AUTD", "STM", "PCM", "SOEM", "TwinCAT", "SDP", "EVD", "GSPAT", "GS", "LM" };
+        private static readonly Regex Regex = new(string.Join('|', Abbreviations.Select(abbr => $@"(?<word>{abbr})")) + @"|(?<word>[A-Z][a-z]*)");
 
         internal static string SnakeToLowerCamel(string snake)
         {
-            if (string.IsNullOrEmpty(snake))
-            {
-                return snake;
-            }
+            if (string.IsNullOrEmpty(snake)) return snake;
 
             return snake
                 .Split('_', StringSplitOptions.RemoveEmptyEntries)
