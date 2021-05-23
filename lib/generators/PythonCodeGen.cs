@@ -69,7 +69,7 @@ class Nativemethods(metaclass=Singleton):
                 sb.AppendLine($"    def init_{NamingUtils.ToSnake(libName)}(self):");
                 sb.AppendLine($"        if hasattr(self, '{NamingUtils.ToSnake(libName)}'):");
                 sb.AppendLine($"            return");
-                sb.AppendLine($"        self.{NamingUtils.ToSnake(libName)} = ctypes.CDLL(os.path.join(self._bin_location, \"{libName.Replace("autd3capi", $"autd3capi_{Constants.Version}")}\" + self._bin_ext))");
+                sb.AppendLine($"        self.{NamingUtils.ToSnake(libName)} = ctypes.CDLL(os.path.join(self._bin_location, self._bin_prefix + \"{libName.Replace("autd3capi", $"autd3capi_{Constants.Version}")}\" + self._bin_ext))");
             }
 
             sb.AppendLine($"        self.{NamingUtils.ToSnake(libName)}.{func.Name}.argtypes = [{GetArgs(func.ArgumentsList)}]");
